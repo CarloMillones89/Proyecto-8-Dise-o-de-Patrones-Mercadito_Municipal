@@ -1,0 +1,151 @@
+CASO DE USO:
+REGISTRO DE STOCK EH INGRESO DE PRODUCTOS A LA PAGINA WEB / CATALOGO
+CONSULTA DE PRODUCTOS DISPONIBLES
+Mercadito_Municipal
+
+USE Mercadito_Municipal;
+
+-- 2. Tabla de Categorías (Organización del catálogo)
+CREATE TABLE categorias (
+    id_categoria INT IDENTITY(1,1) PRIMARY KEY, -- Reemplaza a AUTO_INCREMENT
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    descripcion VARCHAR(255)
+);
+GO
+
+-- 3. Tabla de Productos (Catálogo general)
+CREATE TABLE productos (
+    id_producto INT IDENTITY(1,1) PRIMARY KEY,
+    codigo_barras VARCHAR(50) UNIQUE,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion VARCHAR(MAX), -- Reemplaza a TEXT
+    precio_venta DECIMAL(10, 2) NOT NULL,
+    stock_actual INT NOT NULL DEFAULT 0,
+    id_categoria INT,
+    fecha_creacion DATETIME DEFAULT GETDATE(), -- Reemplaza a TIMESTAMP y CURRENT_TIMESTAMP
+    CONSTRAINT fk_productos_categorias 
+        FOREIGN KEY (id_categoria) REFERENCES categorias(id_categoria)
+        ON DELETE SET NULL ON UPDATE CASCADE
+);
+GO
+
+-- 4. Tabla de Ingresos de Stock (Historial de reabastecimiento)
+CREATE TABLE ingresos_stock (
+    id_ingreso INT IDENTITY(1,1) PRIMARY KEY,
+    id_producto INT NOT NULL,
+    cantidad INT NOT NULL,
+    precio_compra DECIMAL(10, 2) NOT NULL,
+    fecha_ingreso DATETIME DEFAULT GETDATE(),
+    CONSTRAINT fk_ingresos_productos 
+        FOREIGN KEY (id_producto) REFERENCES productos(id_producto)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+GO
+
+CREATE PROCEDURE sp_registrar_producto
+    @p_codigo_barras VARCHAR(50),
+    @p_nombre VARCHAR(150),
+    @p_descripcion VARCHAR(MAX),
+    @p_precio_venta DECIMAL(10,2),
+    @p_id_categoria INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    INSERT INTO productos (codigo_barras, nombre, descripcion, precio_venta, stock_actual, id_categoria)
+    VALUES (@p_codigo_barras, @p_nombre, @p_descripcion, @p_precio_venta, 0, @p_id_categoria);
+    
+    PRINT 'Producto registrado exitosamente en el catálogo con stock inicial 0.';
+END;
+GO
+
+-- 2. PROCEDIMIENTO: Registro de Stock (Reabastecimiento)
+CREATE OR ALTER PROCEDURE sp_ingresar_stock
+    @p_id_producto INT,
+    @p_cantidad INT,
+    @p_precio_compra DECIMAL(10,2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        -- Insertar en el historial de ingresos
+        INSERT INTO ingresos_stock (id_producto, cantidad, precio_compra)
+        VALUES (@p_id_producto, @p_cantidad, @p_precio_compra);
+
+        -- Incrementar el stock actual en el catálogo de productos
+        UPDATE productos
+        SET stock_actual = stock_actual + @p_cantidad
+        WHERE id_producto = @p_id_producto;
+
+        COMMIT TRANSACTION;
+        PRINT 'Stock ingresado y actualizado correctamente.';
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW 50001, 'Error al registrar el ingreso de stock.', 1;
+    END CATCH;
+END;
+GO
+
+-- 3. PROCEDIMIENTO: Simular Venta (Valida y evita vender stock de más)
+CREATE OR ALTER PROCEDURE sp_procesar_venta_producto
+    @p_id_producto INT,
+    @p_cantidad_a_vender INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    DECLARE @v_stock_disponible INT;
+
+    -- Obtener el stock actual del producto
+    SELECT @v_stock_disponible = stock_actual 
+    FROM productos 
+    WHERE id_producto = @p_id_producto;
+
+    -- Validar si el producto existe
+    IF @v_stock_disponible IS NULL
+    BEGIN
+        RAISERROR('El producto solicitado no existe.', 16, 1);
+        RETURN;
+    END;
+
+    -- Validar si hay stock suficiente
+    IF @v_stock_disponible < @p_cantidad_a_vender
+    BEGIN
+        DECLARE @msg VARCHAR(200);
+        SET @msg = 'No se puede realizar la venta. Stock insuficiente. Disponible: ' + CAST(@v_stock_disponible AS VARCHAR(10)) + ', Solicitado: ' + CAST(@p_cantidad_a_vender AS VARCHAR(10));
+        RAISERROR(@msg, 16, 1);
+        RETURN;
+    END;
+
+    -- Si pasa la validación, se descuenta el stock
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        UPDATE productos
+        SET stock_actual = stock_actual - @p_cantidad_a_vender
+        WHERE id_producto = @p_id_producto;
+
+        COMMIT TRANSACTION;
+        PRINT 'Venta procesada exitosamente. Stock actualizado.';
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW 50002, 'Error al procesar la reducción de stock en la venta.', 1;
+    END CATCH;
+END;
+GO
+
+-- 4. PROCEDIMIENTO: Consulta de productos disponibles (Stock > 0)
+CREATE OR ALTER PROCEDURE sp_consultar_productos_disponibles
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT p.id_producto, p.codigo_barras, p.nombre, p.precio_venta, p.stock_actual, c.nombre AS categoria
+    FROM productos p
+    LEFT JOIN categorias c ON p.id_categoria = c.id_categoria
+    WHERE p.stock_actual > 0;
+END;
+GO
+

@@ -1,0 +1,85 @@
+USE Mercadito_Municipal;
+GO
+
+PRINT '=== INICIANDO REGISTRO MASIVO DE PRODUCTOS Y STOCK ===';
+
+-- =========================================================================
+-- PASO 1: ASEGURAR QUE EXISTAN LAS CATEGORÍAS
+-- =========================================================================
+IF NOT EXISTS (SELECT 1 FROM categorias WHERE nombre = 'Lácteos')
+    INSERT INTO categorias (nombre, descripcion) VALUES ('Lácteos', 'Productos derivados de la leche');
+
+IF NOT EXISTS (SELECT 1 FROM categorias WHERE nombre = 'Abarrotes')
+    INSERT INTO categorias (nombre, descripcion) VALUES ('Abarrotes', 'Productos secos y canasta básica');
+
+IF NOT EXISTS (SELECT 1 FROM categorias WHERE nombre = 'Carnes')
+    INSERT INTO categorias (nombre, descripcion) VALUES ('Carnes', 'Cortes de carne res, pollo y cerdo');
+GO
+
+
+-- =========================================================================
+-- PASO 2: REGISTRAR LOS PRODUCTOS EN EL CATÁLOGO (Inician con Stock = 0)
+-- =========================================================================
+DECLARE @id_lacteos INT, @id_abarrotes INT, @id_carnes INT;
+
+SELECT @id_lacteos = id_categoria FROM categorias WHERE nombre = 'Lácteos';
+SELECT @id_abarrotes = id_categoria FROM categorias WHERE nombre = 'Abarrotes';
+SELECT @id_carnes = id_categoria FROM categorias WHERE nombre = 'Carnes';
+
+-- Producto 1: Leche
+IF NOT EXISTS (SELECT 1 FROM productos WHERE codigo_barras = '75020011')
+    EXEC sp_registrar_producto '75020011', 'Leche Entera 1L', 'Leche fresca pasteurizada', 4.20, @id_lacteos;
+
+-- Producto 2: Queso
+IF NOT EXISTS (SELECT 1 FROM productos WHERE codigo_barras = '75020022')
+    EXEC sp_registrar_producto '75020022', 'Queso Fresco 500g', 'Queso artesanal bajo en sal', 6.50, @id_lacteos;
+
+-- Producto 3: Arroz
+IF NOT EXISTS (SELECT 1 FROM productos WHERE codigo_barras = '75030011')
+    EXEC sp_registrar_producto '75030011', 'Arroz Superior 1kg', 'Arroz grano largo seleccionado', 3.80, @id_abarrotes;
+
+-- Producto 4: Aceite
+IF NOT EXISTS (SELECT 1 FROM productos WHERE codigo_barras = '75030022')
+    EXEC sp_registrar_producto '75030022', 'Aceite Vegetal 1L', 'Aceite ideal para cocina y freír', 8.90, @id_abarrotes;
+
+-- Producto 5: Filete de Pollo
+IF NOT EXISTS (SELECT 1 FROM productos WHERE codigo_barras = '75040011')
+    EXEC sp_registrar_producto '75040011', 'Filete de Pollo 1kg', 'Pechuga de pollo limpia deshuesada', 12.50, @id_carnes;
+GO
+
+
+-- =========================================================================
+-- PASO 3: INGRESAR EL STOCK PARA CADA PRODUCTO REGISTRADO
+-- =========================================================================
+DECLARE @id_p1 INT, @id_p2 INT, @id_p3 INT, @id_p4 INT, @id_p5 INT;
+
+-- Capturamos los IDs autogenerados mediante sus códigos de barra
+SELECT @id_p1 = id_producto FROM productos WHERE codigo_barras = '75020011';
+SELECT @id_p2 = id_producto FROM productos WHERE codigo_barras = '75020022';
+SELECT @id_p3 = id_producto FROM productos WHERE codigo_barras = '75030011';
+SELECT @id_p4 = id_producto FROM productos WHERE codigo_barras = '75030022';
+SELECT @id_p5 = id_producto FROM productos WHERE codigo_barras = '75040011';
+
+-- Abastecemos Leche: 30 unidades a $2.80 costo c/u
+EXEC sp_ingresar_stock @id_p1, 30, 2.80;
+
+-- Abastecemos Queso: 15 unidades a $4.50 costo c/u
+EXEC sp_ingresar_stock @id_p2, 15, 4.50;
+
+-- Abastecemos Arroz: 50 unidades a $2.10 costo c/u
+EXEC sp_ingresar_stock @id_p3, 50, 2.10;
+
+-- Abastecemos Aceite: 20 unidades a $5.80 costo c/u
+EXEC sp_ingresar_stock @id_p4, 20, 5.80;
+
+-- Abastecemos Pollo: 12 unidades a $8.50 costo c/u
+EXEC sp_ingresar_stock @id_p5, 12, 8.50;
+GO
+
+
+-- =========================================================================
+-- PASO 4: CONSULTAR EL CATÁLOGO COMPLETO ACTUALIZADO
+-- =========================================================================
+PRINT '--- Catálogo de Productos Disponibles en el Mercadito Municipal ---';
+EXEC sp_consultar_productos_disponibles;
+GO
