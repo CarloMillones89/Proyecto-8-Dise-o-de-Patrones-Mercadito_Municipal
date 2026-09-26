@@ -2,8 +2,6 @@ package PRUEBAS;
 
 
 import DAO.DAOProducto;
-import Modelo.Producto;
-import java.util.List;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -20,28 +18,26 @@ public class PruebaDAOProducto {
 
         DAOProducto dao = new DAOProducto();
 
-        List<Producto> productos =
-                dao.consultarProductosDisponibles();
+        System.out.println("\n3. REGISTRAR PRODUCTO");
+        System.out.println("------------------------------------------");
 
-        System.out.println("==============================");
-        System.out.println("PRODUCTOS DISPONIBLES");
-        System.out.println("==============================");
+        String codigoBarras = "7750123450998";
+        String nombre = "Galletas Oreo";
+        String descripcion = "Galletas de chocolate";
+        double precioVenta = 3.50;
+        int idCategoria = 1;
+        int idTienda = 1;
 
-        for (Producto producto : productos) {
+        boolean registrado = dao.registrarProducto(codigoBarras,nombre,descripcion,precioVenta,idCategoria,idTienda);
 
-            System.out.println("ID: " + producto.getIdProducto());
+    if (registrado) {
 
-            System.out.println("Código: " + producto.getCodigoBarras());
+        System.out.println("Producto: " + nombre);
 
-            System.out.println("Nombre: " + producto.getNombre());
+        System.out.println("Tienda: " + idTienda);
+    } else {
 
-            System.out.println("Precio: S/ " + producto.getPrecioVenta());
-
-            System.out.println("Stock: " + producto.getStockActual());
-
-            System.out.println("Categoría: " + producto.getCategoria());
-
-            System.out.println("------------------------------");
-        }
+        System.out.println("No se pudo registrar el producto.");
+    }
     }
 }

@@ -9,19 +9,21 @@ package Modelo;
  * @author Carlo
  */
 public class Vendedor extends Usuario{
-    private String tienda;
+    private final int idTienda;
+    private final String tienda;
 
-    public Vendedor(String nombre, String tienda) {
+    public Vendedor(String nombre, int idTienda, String tienda) {
         super(nombre);
+        this.idTienda = idTienda;
         this.tienda = tienda;
+    }
+
+    public int getIdTienda() {
+        return idTienda;
     }
 
     public String getTienda() {
         return tienda;
-    }
-
-    public void setTienda(String tienda) {
-        this.tienda = tienda;
     }
 
     @Override
@@ -29,13 +31,15 @@ public class Vendedor extends Usuario{
 
         System.out.println();
         System.out.println("==================================");
-        System.out.println("        MENÚ DEL VENDEDOR");
+        System.out.println("          MENU VENDEDOR");
         System.out.println("==================================");
         System.out.println("Vendedor: " + nombre);
         System.out.println("Tienda: " + tienda);
+        System.out.println("ID Tienda: " + idTienda);
         System.out.println("----------------------------------");
-        System.out.println("1. Ingresar producto");
-        System.out.println("2. Consultar productos");
-        System.out.println("3. Salir");
+        System.out.println("1. Registrar producto");
+        System.out.println("2. Ingresar stock");
+        System.out.println("3. Ver productos");
+        System.out.println("4. Salir");
     }
 }

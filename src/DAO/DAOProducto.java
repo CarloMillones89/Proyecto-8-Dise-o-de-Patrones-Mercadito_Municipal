@@ -22,15 +22,12 @@ public class DAOProducto {
     public DAOProducto() {
         db = DatabaseSingleton.getInstancia();
     }
-    
-    
     public boolean ingresarStock(int idProducto, int cantidad, double precioCompra) {
 
         String sql = "{CALL sp_ingresar_stock(?, ?, ?)}";
 
     try {
         Connection conexion = (Connection) DatabaseSingleton.getInstancia().getConexion();
-
             try (CallableStatement sentencia = conexion.prepareCall(sql)) {
                 sentencia.setInt(1, idProducto);
                 sentencia.setInt(2, cantidad);
@@ -38,42 +35,28 @@ public class DAOProducto {
                 
                 sentencia.execute();
             }
-
         System.out.println("Stock ingresado y actualizado correctamente.");
-
         return true;
 
     } catch (SQLException e) {
-
         System.out.println("Error al ingresar stock: " + e.getMessage());
-
         return false;
     }
     }
     public boolean procesarVenta(int idProducto, int cantidadAVender) {
-
         String sql = "{CALL sp_procesar_venta_producto(?, ?)}";
-
         try {
             Connection conexion = db.getConexion();
-
             CallableStatement sentencia = conexion.prepareCall(sql);
-
             sentencia.setInt(1, idProducto);
             sentencia.setInt(2, cantidadAVender);
-
             sentencia.execute();
-
             sentencia.close();
-
             System.out.println("Venta procesada correctamente.");
-
             return true;
 
         } catch (SQLException e) {
-
             System.out.println("Error al procesar la venta: " + e.getMessage());
-
             return false;
         }
     }
@@ -112,11 +95,41 @@ public class DAOProducto {
 
         } catch (SQLException e) {
 
-            System.out.println(
-                    "Error al consultar productos: " + e.getMessage()
-            );
+            System.out.println("Error al consultar productos: " + e.getMessage());
         }
-
         return disponibles;
     }
+    public boolean registrarProducto(
+        String codigoBarras,
+        String nombre,
+        String descripcion,
+        double precioVenta,
+        int idCategoria,
+        int idTienda) {
+
+    String sql = "{CALL sp_registrar_producto(?, ?, ?, ?, ?, ?)}";
+
+    try {
+        Connection conexion = db.getConexion();
+        CallableStatement sentencia =conexion.prepareCall(sql);
+        sentencia.setString(1, codigoBarras);
+        sentencia.setString(2, nombre);
+        sentencia.setString(3, descripcion);
+        sentencia.setDouble(4, precioVenta);
+        sentencia.setInt(5, idCategoria);
+        sentencia.setInt(6, idTienda);
+        sentencia.execute();
+        sentencia.close();
+        System.out.println(
+                "Producto registrado correctamente."
+        );
+        return true;
+    } catch (SQLException e) {
+        System.out.println(
+                "Error al registrar producto: "
+                + e.getMessage()
+        );
+        return false;
+    }
+}
 }

@@ -17,18 +17,15 @@ public class UsuarioFactory {
     public static Usuario crearUsuario(
             int tipo,
             String nombre,
+            int idTienda,
             String tienda) {
 
         switch (tipo) {
 
-            case 1 -> {
-                return new Vendedor(nombre, tienda);
-            }
-
-            case 2 -> {
-                return new Comprador(nombre);
-            }
-
+            case 1 -> {return new Vendedor(nombre,idTienda,tienda);}
+            
+            case 2 -> {return new Comprador(nombre);}
+            
             default -> throw new IllegalArgumentException(
                         "Tipo de usuario no válido."
                 );
