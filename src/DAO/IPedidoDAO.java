@@ -1,6 +1,6 @@
-package Dao;
+package DAO;
 import java.util.List;
-import Model.Pedido;
+import Modelo.Pedido;
 public interface IPedidoDAO {
  
     public boolean registrar(Pedido p);

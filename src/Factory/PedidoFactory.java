@@ -1,7 +1,7 @@
-package Controller;
-import Model.Pedido;
-import Model.PedidoDelivery;
-import Model.PedidoTienda;
+package Factory;
+import Modelo.Pedido;
+import Modelo.PedidoDelivery;
+import Modelo.PedidoTienda;
 public class PedidoFactory {
     public static Pedido crearPedido(String tipo) {
         if (tipo == null) return null;

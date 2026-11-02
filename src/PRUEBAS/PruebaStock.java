@@ -1,7 +1,7 @@
 package PRUEBAS;
 
 
-import DAO.DAOProducto;
+import DAO.ProductoDAO;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -18,7 +18,7 @@ public class PruebaStock {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        DAOProducto dao = new DAOProducto();
+        ProductoDAO dao = new ProductoDAO();
 
         int idProducto = 1;
         int cantidad = 5;

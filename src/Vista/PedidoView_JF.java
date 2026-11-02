@@ -1,6 +1,9 @@
-package View;
+package Vista;
+import Adapter.PagoAdapter;
+import Adapter.PagoService;
 import Controller.PedidoController;
-import Model.Pedido;
+import Modelo.ObservadorPedido;
+import Modelo.Pedido;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
@@ -10,6 +13,28 @@ public class PedidoView_JF extends javax.swing.JFrame {
     private PedidoController controller;
     private DefaultTableModel modeloTabla;
     private Pedido ultimoPedido;
+    private PagoService pagoService = new PagoAdapter();
+    public class ObservadorPedidoVista implements ObservadorPedido {
+
+    private final java.awt.Component ventana;
+
+    public ObservadorPedidoVista(java.awt.Component ventana) {
+        this.ventana = ventana;
+    }
+
+    @Override
+    public void actualizar(Pedido pedido) {
+        JOptionPane.showMessageDialog(
+                ventana,
+                "El pedido #" + pedido.getIdPedido()
+                + " cambió al estado: " + pedido.getEstado(),
+                "Actualización del pedido",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+}
+    
+    
     public PedidoView_JF() {
         initComponents();
         controller = new PedidoController();
@@ -50,6 +75,8 @@ public class PedidoView_JF extends javax.swing.JFrame {
             btnCambiarEstado.setVisible(false);
         }
     }
+    
+    
 private void actualizarCamposDelivery() {
     boolean esDelivery = rbDelivery.isSelected();
     txtDireccion.setEnabled(esDelivery);
@@ -449,57 +476,108 @@ private void limpiarCampos() {
 
     private void btnRegistrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegistrarActionPerformed
     try {
-        if (txtNombre.getText().trim().isEmpty()
-                || txtDni.getText().trim().isEmpty()
-                || txtProducto.getText().trim().isEmpty()
-                || txtCantidad.getText().trim().isEmpty()
-                || txtPrecio.getText().trim().isEmpty()) {
+    // 1. Validar campos obligatorios
+    if (txtNombre.getText().trim().isEmpty()
+            || txtDni.getText().trim().isEmpty()
+            || txtProducto.getText().trim().isEmpty()
+            || txtCantidad.getText().trim().isEmpty()
+            || txtPrecio.getText().trim().isEmpty()) {
+
+        JOptionPane.showMessageDialog(this,
+                "Todos los campos comunes son obligatorios.",
+                "Campos vacíos",
+                JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    // 2. Obtener el tipo de pedido
+    String tipo = rbDelivery.isSelected() ? "DELIVERY" : "TIENDA";
+
+    String direccion = "";
+    double costoEnvio = 0.0;
+
+    // 3. Validar datos de Delivery
+    if ("DELIVERY".equals(tipo)) {
+        if (txtDireccion.getText().trim().isEmpty()
+                || txtCostoEnvio.getText().trim().isEmpty()) {
+
             JOptionPane.showMessageDialog(this,
-                    "Todos los campos comunes son obligatorios.",
+                    "Para Delivery, la dirección y el costo de envío son obligatorios.",
                     "Campos vacíos",
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-        String tipo = rbDelivery.isSelected() ? "DELIVERY" : "TIENDA";
-        String direccion = "";
-        double costoEnvio = 0.0;
-        if ("DELIVERY".equals(tipo)) {
-            if (txtDireccion.getText().trim().isEmpty()
-                    || txtCostoEnvio.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                        "Para Delivery, la dirección y el costo de envío son obligatorios.",
-                        "Campos vacíos",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            direccion = txtDireccion.getText().trim();
-            costoEnvio = Double.parseDouble(txtCostoEnvio.getText().trim());
-        }
-        boolean ok = controller.registrarPedidoConFactory(
-                tipo,
-                txtNombre.getText().trim(),
-                txtDni.getText().trim(),
-                txtProducto.getText().trim(),
-                Integer.parseInt(txtCantidad.getText().trim()),
-                Double.parseDouble(txtPrecio.getText().trim()),
-                direccion,
-                costoEnvio
-        );
-        if (ok) {
-            JOptionPane.showMessageDialog(this, "Pedido registrado correctamente.");
-            limpiarCampos();
-            cargarPedidos();
-        } else {
-            JOptionPane.showMessageDialog(this,
-                    "No se pudo registrar el pedido.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    } catch (NumberFormatException e) {
+
+        direccion = txtDireccion.getText().trim();
+        costoEnvio = Double.parseDouble(txtCostoEnvio.getText().trim());
+    }
+
+    // 4. Convertir cantidad y precio
+    int cantidad = Integer.parseInt(txtCantidad.getText().trim());
+    double precio = Double.parseDouble(txtPrecio.getText().trim());
+
+    if (cantidad <= 0 || precio <= 0 || costoEnvio < 0) {
         JOptionPane.showMessageDialog(this,
-                "Cantidad, Precio y Costo de Envío deben ser números válidos.",
+                "La cantidad y el precio deben ser mayores que cero. "
+                + "El costo de envío no puede ser negativo.",
                 "Datos inválidos",
                 JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    // 5. Calcular el total
+    double total = (cantidad * precio) + costoEnvio;
+
+    // 6. Procesar el pago mediante el patrón Adapter
+    boolean pagoAprobado = pagoService.procesarPago(total);
+
+    if (!pagoAprobado) {
+        JOptionPane.showMessageDialog(this,
+                "El pago fue rechazado. No se registró el pedido.",
+                "Pago rechazado",
+                JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+
+    // 7. Registrar el pedido si el pago fue aprobado
+    boolean ok = controller.registrarPedidoConFactory(
+            tipo,
+            txtNombre.getText().trim(),
+            txtDni.getText().trim(),
+            txtProducto.getText().trim(),
+            cantidad,
+            precio,
+            direccion,
+            costoEnvio
+    );
+
+    // 8. Mostrar el resultado
+    if (ok) {
+        JOptionPane.showMessageDialog(this,
+                "Pago aprobado y pedido registrado correctamente.");
+
+        limpiarCampos();
+        cargarPedidos();
+
+    } else {
+        JOptionPane.showMessageDialog(this,
+                "El pago fue aprobado, pero no se pudo registrar el pedido. "
+                + "Verifica el sistema.",
+                "Error al registrar",
+                JOptionPane.ERROR_MESSAGE);
+    }
+
+    } catch (NumberFormatException e) {
+        JOptionPane.showMessageDialog(this,
+            "Cantidad, Precio y Costo de Envío deben ser números válidos.",
+            "Datos inválidos",
+            JOptionPane.WARNING_MESSAGE);
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this,
+            "Ocurrió un error: " + e.getMessage(),
+            "Error",
+            JOptionPane.ERROR_MESSAGE);
     }
     }//GEN-LAST:event_btnRegistrarActionPerformed
 
@@ -530,38 +608,47 @@ private void limpiarCampos() {
     }//GEN-LAST:event_rbTiendaActionPerformed
 
     private void btnCambiarEstadoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCambiarEstadoActionPerformed
-       if (rolActual.equals("CLIENTE")) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Acceso Denegado. Solo el Administrador puede cambiar estados.");
+        if (!rolActual.equals("ADMIN")) {
+            JOptionPane.showMessageDialog(this,"Solo el administrador puede cambiar estados.");
             return;
         }
-        int fila = tblPedidos.getSelectedRow();
-        if (fila == -1) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Por favor, seleccione un pedido de la tabla.");
-            return;
-        }
-        int idPedido = Integer.parseInt(tblPedidos.getValueAt(fila, 0).toString());
-        String nombreCliente = tblPedidos.getValueAt(fila, 1).toString();
-        Model.Pedido pedidoSeleccionado = new Model.Pedido();
-        pedidoSeleccionado.setIdPedido(idPedido);
-        pedidoSeleccionado.setNombreCliente(nombreCliente);
-        // Preguntamos el nuevo estado
-        String[] opcionesEstado = {"PENDIENTE", "ENVIADO"};
-        String seleccion = (String) javax.swing.JOptionPane.showInputDialog(
-                this, "Seleccione el nuevo estado:", "Cambiar Estado",
-                javax.swing.JOptionPane.QUESTION_MESSAGE, null, opcionesEstado, opcionesEstado[0]);
-        if (seleccion == null) return; 
-        // El Observer salta automaticamente al cambiar de estado
-        pedidoSeleccionado.agregarObservador(new Model.ObservadorPedido() {
-            @Override
-            public void actualizar(String mensaje) {
-                javax.swing.JOptionPane.showMessageDialog(null, "NOTIFICACION AL CLIENTE: " + mensaje);
-            }
-        });
 
-        // Llamamos al controlador (que aplica el STATE y guarda en la BD)
-        controller.cambiarEstadoPedido(pedidoSeleccionado, seleccion);
-        // Recargamos la tabla para que veas el cambio reflejado desde la BD
-        cargarPedidos();
+        int fila = tblPedidos.getSelectedRow();
+
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(this,"Seleccione un pedido de la tabla.");
+            return;
+        }
+
+        int idPedido = Integer.parseInt(tblPedidos.getValueAt(fila, 0).toString());
+
+        String estadoActual = tblPedidos.getValueAt(fila, 8).toString();
+
+        String[] opcionesEstado = {"Pendiente", "Enviado"};
+
+        String seleccion = (String) JOptionPane.showInputDialog(this,"Seleccione el nuevo estado:","Cambiar estado",JOptionPane.QUESTION_MESSAGE,null,opcionesEstado,estadoActual
+        );
+
+        if (seleccion == null) {
+        return;
+        }
+
+        Pedido pedidoSeleccionado = new Pedido();
+
+        pedidoSeleccionado.setIdPedido(idPedido);
+        pedidoSeleccionado.setEstado(estadoActual);
+
+    // Registrar el observador de la ventana.
+        pedidoSeleccionado.agregarObservador(new ObservadorPedidoVista(this));
+
+    // Cambiar estado mediante Controller y State.
+        boolean actualizado = controller.cambiarEstadoPedido(pedidoSeleccionado,seleccion);
+
+        if (actualizado) {
+            cargarPedidos();
+        } else {
+            JOptionPane.showMessageDialog(this,"No se pudo actualizar el estado del pedido.","Error",JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnCambiarEstadoActionPerformed
 
     /**

@@ -17,18 +17,7 @@ public class ConexionSQLServer {
             + "integratedSecurity=true;"
             + "encrypt=false;";
 
-    public static Connection conectar() {
-
-        try {
-            Connection conexion = DriverManager.getConnection(URL);
-
-            
-            return conexion;
-
-        } catch (SQLException e) {
-
-
-            return null;
-        }
+    public static Connection conectar() throws SQLException {
+        return DriverManager.getConnection(URL);
     }
 }

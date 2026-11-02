@@ -4,16 +4,38 @@
  */
 package PRUEBAS;
 
-import Controller.ConexionSQLServer;
+import Singleton.DatabaseSingleton;
+import java.sql.Connection;
+import java.sql.SQLException;
 
-/**
- *
- * @author Carlo
- */
 public class PruebaConexion {
+
     public static void main(String[] args) {
 
-        ConexionSQLServer.conectar();
+        System.out.println("==================================");
+        System.out.println("     PRUEBA DE CONEXION SQL");
+        System.out.println("==================================");
 
+        try {
+            Connection conexion =
+                    DatabaseSingleton.getInstancia().getConexion();
+
+            if (conexion != null && !conexion.isClosed()) {
+
+                System.out.println("CONEXION EXITOSA");
+                System.out.println("Base de datos: "+ conexion.getCatalog());
+
+            } else {
+
+                System.out.println("No se pudo establecer la conexion.");
+            }
+
+        } catch (SQLException | IllegalStateException e) {
+
+            System.out.println("ERROR DE CONEXION");
+            System.out.println(e.getMessage());
+        }
+
+        System.out.println("==================================");
     }
 }

@@ -6,21 +6,35 @@ package Singleton;
 
 import Controller.ConexionSQLServer;
 import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  *
  * @author Carlo Montañez
  */
 public class DatabaseSingleton {
-     private static DatabaseSingleton instancia;
+    private static DatabaseSingleton instancia;
 
     private Connection conexion;
 
     private DatabaseSingleton() {
-        conexion = (Connection) ConexionSQLServer.conectar();
+        try {
+            conexion = ConexionSQLServer.conectar();
+
+            System.out.println(
+                    "Conexión única a SQL Server establecida."
+            );
+
+        } catch (SQLException e) {
+            
+            throw new IllegalStateException(
+                    "No se pudo conectar con SQL Server: "
+                    + e.getMessage(), e
+            );
+        }
     }
 
-    public static DatabaseSingleton getInstancia() {
+    public static synchronized DatabaseSingleton getInstancia() {
 
         if (instancia == null) {
             instancia = new DatabaseSingleton();

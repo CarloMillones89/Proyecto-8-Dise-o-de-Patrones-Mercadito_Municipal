@@ -1,7 +1,7 @@
 package PRUEBAS;
 
 
-import DAO.DAOProducto;
+import DAO.ProductoDAO;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -16,7 +16,7 @@ public class PruebaDAOProducto {
 
     public static void main(String[] args) {
 
-        DAOProducto dao = new DAOProducto();
+        ProductoDAO dao = new ProductoDAO();
 
         System.out.println("\n3. REGISTRAR PRODUCTO");
         System.out.println("------------------------------------------");

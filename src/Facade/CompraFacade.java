@@ -10,15 +10,15 @@ package Facade;
  */
 import Adapter.PagoAdapter;
 import Adapter.PagoService;
-import DAO.DAOProducto;
+import DAO.ProductoDAO;
 
 
 public class CompraFacade {
-    private DAOProducto daoProducto;
+    private ProductoDAO daoProducto;
     private PagoService pagoService;
 
     public CompraFacade() {
-        daoProducto = new DAOProducto();
+        daoProducto = new ProductoDAO();
         pagoService = new PagoAdapter();
     }
 

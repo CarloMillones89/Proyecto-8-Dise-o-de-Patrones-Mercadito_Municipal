@@ -1,6 +1,8 @@
-package Model;
+package Modelo;
 import java.util.ArrayList;
 import java.util.List;
+
+
 public class Pedido implements Cloneable {
     private int idPedido;
     private String nombreCliente;
@@ -14,9 +16,11 @@ public class Pedido implements Cloneable {
     private String tipoPedido;
     private String direccionEntrega;
     private double costoEnvio;
+    
     // VARIABLES PARA STATE Y OBSERVER
     private EstadoPedido estadoActual = new EstadoPendiente();
     private List<ObservadorPedido> observadores = new ArrayList<>();
+        
     
     public Pedido() {
     }
@@ -41,25 +45,49 @@ public class Pedido implements Cloneable {
     //prototype
     @Override
     public Pedido clone() {
-        try {
-            return (Pedido) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException("Error al clonar Pedido", e);
+    try {
+        Pedido clon = (Pedido) super.clone();
+
+        // Evita compartir la lista de observadores.
+        clon.observadores = new ArrayList<>(this.observadores);
+
+        // Copia el estado actual del pedido.
+        if ("Enviado".equalsIgnoreCase(this.estado)) {
+            clon.estadoActual = new EstadoEnviado();
+        } else {
+            clon.estadoActual = new EstadoPendiente();
         }
+
+        return clon;
+
+    } catch (CloneNotSupportedException e) {
+        throw new RuntimeException("Error al clonar Pedido", e);
     }
+}
     // METODOS PARA EL PATRON OBSERVER
-    public void agregarObservador(ObservadorPedido obs) {
-        observadores.add(obs);
-    }
-    public void notificarObservadores() {
-        for (ObservadorPedido obs : observadores) {
-            obs.actualizar("El pedido de " + this.nombreCliente + " ha cambiado a: " + estadoActual.getNombreEstado());
+    public void agregarObservador(ObservadorPedido observador) {
+        if (observador != null && !observadores.contains(observador)) {
+            observadores.add(observador);
         }
+    }
+    public void eliminarObservador(ObservadorPedido observador) {
+        observadores.remove(observador);
+    }
+
+    private void notificarObservadores() {
+        for (ObservadorPedido observador :
+            new ArrayList<>(observadores)) {
+
+        observador.actualizar(this);
+    }
     }
     // METODOS PARA EL PATRON STATE
     public void cambiarEstado(EstadoPedido nuevoEstado) {
+        if (nuevoEstado == null) {
+            throw new IllegalArgumentException("El estado no puede ser null.");
+        }
         this.estadoActual = nuevoEstado;
-        this.setEstado(nuevoEstado.getNombreEstado()); 
+        this.estado = nuevoEstado.getNombreEstado();
         notificarObservadores();
     }
     public String getEstadoActual() {
@@ -82,7 +110,15 @@ public class Pedido implements Cloneable {
     public String getFechaPedido() { return fechaPedido; }
     public void setFechaPedido(String fechaPedido) { this.fechaPedido = fechaPedido; }
     public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
+    
+    public void setEstado(String estado) {
+        this.estado = estado;
+        if (estado != null && estado.equalsIgnoreCase("Enviado")) {
+            this.estadoActual = new EstadoEnviado();
+        } else {
+            this.estadoActual = new EstadoPendiente();
+        }
+    }
     public String getTipoPedido() { return tipoPedido; }
     public void setTipoPedido(String tipoPedido) { this.tipoPedido = tipoPedido; }
     public String getDireccionEntrega() { return direccionEntrega; }
