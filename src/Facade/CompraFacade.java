@@ -11,15 +11,39 @@ package Facade;
 import Adapter.PagoAdapter;
 import Adapter.PagoService;
 import DAO.DAOProducto;
+import Observer.GestorReportesVenta;
+import Observer.ReporteObserver;
 
 
 public class CompraFacade {
     private DAOProducto daoProducto;
     private PagoService pagoService;
+    private GestorReportesVenta gestorReportes;
 
     public CompraFacade() {
         daoProducto = new DAOProducto();
         pagoService = new PagoAdapter();
+        gestorReportes = new GestorReportesVenta();
+    }
+
+    /**
+     * Permite suscribir un observador de reportes al flujo de compras.
+     * @param observer Observador que implementa ReporteObserver.
+     */
+    public void suscribirReporte(ReporteObserver observer) {
+        gestorReportes.agregarObservador(observer);
+    }
+
+    /**
+     * Permite desuscribir un observador de reportes.
+     * @param observer Observador a remover.
+     */
+    public void desuscribirReporte(ReporteObserver observer) {
+        gestorReportes.eliminarObservador(observer);
+    }
+
+    public GestorReportesVenta getGestorReportes() {
+        return gestorReportes;
     }
 
     public boolean realizarCompra(int idProducto,int cantidad,double precio) {
@@ -66,6 +90,9 @@ public class CompraFacade {
 
         System.out.println("Total pagado: S/ " + String.format("%.2f", total));
         System.out.println("Stock actualizado correctamente." );
+
+        // [PATRÓN OBSERVER] Se notifica a los observadores suscritos para la emisión de reportes
+        gestorReportes.registrarVenta(idProducto, cantidad, precio);
 
         return true;
     }
