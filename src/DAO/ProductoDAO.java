@@ -81,6 +81,32 @@ public class ProductoDAO {
         }
     }
 
+    // CONSULTAR TODO EL STOCK
+    public List<Producto> consultarStock() {
+        return consultarProductosDisponibles();
+    }
+
+    // BUSCAR PRODUCTOS POR NOMBRE
+    public List<Producto> buscarStock(String nombre) {
+
+        List<Producto> lista = new ArrayList<>();
+
+        // Reutilizamos el procedimiento almacenado existente
+        List<Producto> productos = consultarProductosDisponibles();
+
+        for (Producto p : productos) {
+
+            if (p.getNombre() != null
+                    && p.getNombre().toLowerCase()
+                            .contains(nombre.toLowerCase())) {
+
+                lista.add(p);
+            }
+        }
+
+        return lista;
+    }
+
     // CONSULTAR PRODUCTOS DISPONIBLES
     public List<Producto> consultarProductosDisponibles() {
 
@@ -91,8 +117,7 @@ public class ProductoDAO {
         try {
             Connection conexion = db.getConexion();
 
-            try (CallableStatement sentencia = conexion.prepareCall(sql);
-                 ResultSet resultado = sentencia.executeQuery()) {
+            try (CallableStatement sentencia = conexion.prepareCall(sql); ResultSet resultado = sentencia.executeQuery()) {
 
                 while (resultado.next()) {
 
@@ -161,17 +186,17 @@ public class ProductoDAO {
             return false;
         }
     }
-    
+
     public void procesarVenta(
-        Connection conexion,
-        int idProducto,
-        int cantidadAVender) throws SQLException {
+            Connection conexion,
+            int idProducto,
+            int cantidadAVender) throws SQLException {
         String sql = "{CALL sp_procesar_venta_producto(?, ?)}";
 
         try (CallableStatement sentencia = conexion.prepareCall(sql)) {
-        sentencia.setInt(1, idProducto);
-        sentencia.setInt(2, cantidadAVender);
-        sentencia.execute();
+            sentencia.setInt(1, idProducto);
+            sentencia.setInt(2, cantidadAVender);
+            sentencia.execute();
         }
     }
 }

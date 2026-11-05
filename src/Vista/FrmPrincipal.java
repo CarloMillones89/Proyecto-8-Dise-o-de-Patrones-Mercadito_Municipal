@@ -70,7 +70,6 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
         Salir.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         Salir.setText("Salir");
-        Salir.setActionCommand("Salir");
         Salir.setAutoscrolls(true);
         Salir.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
