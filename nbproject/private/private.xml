@@ -3,7 +3,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/Escritorio/UNIVERSIDAD/5°_ciclo/Diseño_de_Patrones/Final/Mercado_Municipal/src/Facade/CompraFacade.java</file>
+            <file>file:/D:/Escritorio/UNIVERSIDAD/5°_ciclo/Diseño_de_Patrones/Final/Mercado_Municipal/src/PRUEBAS/PruebaCatalogo.java</file>
+            <file>file:/D:/Escritorio/UNIVERSIDAD/5°_ciclo/Diseño_de_Patrones/Final/Mercado_Municipal/src/DAO/IProductoDAO.java</file>
+            <file>file:/D:/Escritorio/UNIVERSIDAD/5°_ciclo/Diseño_de_Patrones/Final/Mercado_Municipal/src/DAO/ProductoDAOProxy.java</file>
+            <file>file:/D:/Escritorio/UNIVERSIDAD/5°_ciclo/Diseño_de_Patrones/Final/Mercado_Municipal/src/DAO/ProductoDAO.java</file>
+            <file>file:/D:/Escritorio/UNIVERSIDAD/5°_ciclo/Diseño_de_Patrones/Final/Mercado_Municipal/src/Vista/PanelCatalogo.java</file>
         </group>
     </open-files>
 </project-private>

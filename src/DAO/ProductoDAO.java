@@ -17,7 +17,7 @@ import java.util.List;
  *
  * @author Carlo Montañez
  */
-public class ProductoDAO {
+public class ProductoDAO implements IProductoDAO{
 
     private final DatabaseSingleton db;
 
@@ -82,7 +82,8 @@ public class ProductoDAO {
     }
 
     // CONSULTAR PRODUCTOS DISPONIBLES
-    public List<Producto> consultarProductosDisponibles() {
+    @Override
+    public List<Producto> consultarProductosDisponibles()  {
 
         List<Producto> disponibles = new ArrayList<>();
 
@@ -174,4 +175,6 @@ public class ProductoDAO {
         sentencia.execute();
         }
     }
+    
+    
 }
